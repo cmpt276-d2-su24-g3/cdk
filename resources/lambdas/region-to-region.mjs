@@ -2,7 +2,8 @@ import { Socket } from 'net'
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
-const client = new DynamoDBClient();
+// automatically tries to PUT in their own regions if not specified
+const client = new DynamoDBClient({ region: 'us-west-2' });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 // find way to get regions programmatically
@@ -50,9 +51,9 @@ async function pingRegion(region) {
                 latency: latency,
             },
         }));
-        console.log(region + "pinged successfully"); // console logs to cloudwatch
+        console.log(region + " pinged successfully"); // console logs to cloudwatch
     } catch (error) {
-        console.log(region + "ping failed");
+        console.log(region + " ping failed");
         console.log(error);
     }
 }

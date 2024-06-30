@@ -6,8 +6,8 @@ import { PingDBStack } from '../lib/pingdb-stack.mjs';
 
 // find way to get regions programmatically
 const REGIONS = [
-    "ca-west-1",
-    "ca-central-1",
+    //"ca-west-1", //disabled due to no func url
+    "ca-central-1", 
     "us-west-1",
     "us-west-2",
     "us-east-1",
