@@ -1,12 +1,13 @@
-# Welcome to your CDK JavaScript project
+# Getting Started with CDK
 
-This is a blank project for CDK development with JavaScript.
+## Prerequisite
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app. The build step is not required when using JavaScript.
+Node.js: Version 14.x or later.  
+AWS CLI: [Setup](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)  
+AWS CDK: [Setup](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)  
 
-## Useful commands
+## Commands
 
-* `npm run test`         perform the jest unit tests
-* `npx cdk deploy`       deploy this stack to your default AWS account/region
-* `npx cdk diff`         compare deployed stack with current state
-* `npx cdk synth`        emits the synthesized CloudFormation template
+> cdk destroy [stack name] (destroys given stack)
+> cdk synth [stack name] (create cloudformation template of given stack)
+> cdk deploy [stack name] (deploys given stack)

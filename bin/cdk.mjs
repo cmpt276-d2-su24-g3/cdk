@@ -6,12 +6,12 @@ import { PingDBStack } from '../lib/pingdb-stack.mjs';
 
 // find way to get regions programmatically
 const REGIONS = [
-    //"ca-west-1",
+    "ca-west-1",
     "ca-central-1",
-    //"us-west-1",
+    "us-west-1",
     "us-west-2",
-    //"us-east-1",
-    //"us-east-2",
+    "us-east-1",
+    "us-east-2",
 ]
 
 const app = new cdk.App();
