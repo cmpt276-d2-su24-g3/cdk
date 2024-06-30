@@ -1,21 +1,36 @@
 #!/usr/bin/env node
 
-const cdk = require('aws-cdk-lib');
-const { CdkStack } = require('../lib/cdk-stack');
+import * as cdk from 'aws-cdk-lib';
+import { LambdaStack } from '../lib/lambda-stack.mjs';
+import { PingDBStack } from '../lib/pingdb-stack.mjs';
+
+// find way to get regions programmatically
+const REGIONS = [
+    //"ca-west-1",
+    "ca-central-1",
+    //"us-west-1",
+    "us-west-2",
+    //"us-east-1",
+    //"us-east-2",
+]
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+// need reference to pass to LambdaStack
+const pingDBStack = new PingDBStack(app, 'PingDBMain', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2',
+    },
+});
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+REGIONS.forEach((region) => {
+    const id = `LambdaStack-${region}`;
+    new LambdaStack(app, id, {
+        table: pingDBStack.getTableReference(),
+        env: {
+            account: '992382793912',
+            region: region,
+        },
+    });
 });
