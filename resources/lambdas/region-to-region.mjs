@@ -45,15 +45,16 @@ async function pingRegion(region) {
     const latency = Number(end - start) / 1e6
 
     try {
-        let time = new Date();
+        const time = new Date().toISOString();
+        const expireAt = Math.floor((new Date().getTime()/1000 + 7 * 24 * 60 * 60));
         await ddbDocClient.send(new PutCommand({
             TableName: process.env.TABLE_NAME,
             Item: {
-                timestamp: time.toISOString,
+                timestamp: time,
                 origin: process.env.THIS_REGION,
                 destination: region,
                 'destination#timestamp': region + '#' + time,
-                expireAt: new Date(time.getTime() + 7 * 24 * 60 * 60 * 1000),
+                expireAt: expireAt,
                 latency: latency,
             },
         }));
