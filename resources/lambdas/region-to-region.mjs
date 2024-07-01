@@ -16,12 +16,15 @@ const REGIONS = [
     "us-east-2",
 ]
 
+
+var count;
 export const handler = async () => {
+    count = 0;
     console.log('Pinging All Regions')
     await Promise.all(REGIONS.map(region => pingRegion(region)));
     return {
         statusCode: 200,
-        body: "All Pings Complete",
+        body: `${count} Pings Complete`,
     };
 }
   
@@ -45,13 +48,14 @@ async function pingRegion(region) {
         await ddbDocClient.send(new PutCommand({
             TableName: process.env.TABLE_NAME,
             Item: {
-                timestamp: Date.now(),
-                origin: process.env.AWS_DEFAULT_REGION,
+                timestamp: new Date().toISOString(),
+                origin: process.env.THIS_REGION,
                 destination: region,
                 latency: latency,
             },
         }));
         console.log(region + " pinged successfully"); // console logs to cloudwatch
+        count++;
     } catch (error) {
         console.log(region + " ping failed");
         console.log(error);
