@@ -21,7 +21,7 @@ var count;
 export const handler = async () => {
     count = 0;
     console.log('Pinging All Regions')
-    await Promise.all(REGIONS.map(region => pingRegion(region)));
+    for (const region of REGIONS) await pingRegion(region);
     return {
         statusCode: 200,
         body: `${count} Pings Complete`,
@@ -45,12 +45,14 @@ async function pingRegion(region) {
     const latency = Number(end - start) / 1e6
 
     try {
+        let time = new Date().toISOString();
         await ddbDocClient.send(new PutCommand({
             TableName: process.env.TABLE_NAME,
             Item: {
-                timestamp: new Date().toISOString(),
+                timestamp: time,
                 origin: process.env.THIS_REGION,
                 destination: region,
+                'destination#timestamp': region + '#' + time,
                 latency: latency,
             },
         }));
