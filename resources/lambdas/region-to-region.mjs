@@ -14,27 +14,10 @@
  * 
  */
 
-
-
-
 import { Socket } from 'net'
 import { DynamoDBClient, EndpointDiscoveryCommand } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
-
-
-// find way to get regions programmatically
-// once the lambda function is deployed, it loses ability to references the rest of this codebase
-/*
-const REGIONS = [
-  'ca-west-1',
-  'ca-central-1',
-  'us-west-1',
-  'us-west-2',
-  'us-east-1',
-  'us-east-2',
-];
-*/
 
 
 const DB_REGION = 'us-west-2';
@@ -45,19 +28,12 @@ const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
 const client = new DynamoDBClient({ region: DB_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
-/*
-export const handler = async () => {
-    for (const region of REGIONS) await pingRegion(region);
-    return {
-        statusCode: 200,
-        body: `Pings Complete`,
-    };
-}
-*/
 
+//fetches AWS regions from SDK
 async function getAWSRegions() {
     const ec2Client = new EC2Client({ region: DB_REGION });
 
+    //allows adding filters for future use cases
     const input = { 
         Filters: [
           { 
@@ -81,7 +57,7 @@ async function getAWSRegions() {
 }
 
 export const handler = async () => {
-    const regions = await getAWSRegions(); // Fetch AWS regions dynamically
+    const regions = await getAWSRegions(); // fetches AWS regions dynamically
     for (const region of regions) await pingRegion(region);
     return {
         statusCode: 200,
