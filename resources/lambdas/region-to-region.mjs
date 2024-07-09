@@ -1,3 +1,22 @@
+/*
+ * Name: Region-to-Region Latency
+ * Description: Dynamically fetches the list of available regions and pings the DynamoDB endpoint in each region. The latency results are then stored in a DynamoDB table for analysis.
+ * 
+ * Modules:
+ * - net: Used for creating network socket connections to measure latency.
+ * - @aws-sdk/client-dynamodb: Provides classes and functions to interact with DynamoDB.
+ * - @aws-sdk/lib-dynamodb: Offers higher-level abstractions for working with DynamoDB.
+ * - @aws-sdk/client-ec2: Allows fetching information about AWS EC2 regions.
+ * 
+ * Environment Variables:
+ * - TABLE_NAME: The name of the DynamoDB table where latency results will be stored.
+ * - THIS_REGION: The AWS region where the Lambda function is deployed.
+ * 
+ */
+
+
+
+
 import { Socket } from 'net'
 import { DynamoDBClient, EndpointDiscoveryCommand } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
@@ -37,8 +56,25 @@ export const handler = async () => {
 */
 
 async function getAWSRegions() {
-    const ec2Client = new EC2Client({ region: DB_REGION }); // Use any default region here
-    const command = new DescribeRegionsCommand({});
+    const ec2Client = new EC2Client({ region: DB_REGION });
+
+    const input = { 
+        Filters: [
+          { 
+            Name: "STRING_VALUE",
+            Values: [ 
+              "STRING_VALUE",
+            ],
+          },
+        ],
+        RegionNames: [ 
+          "STRING_VALUE",
+        ],
+        DryRun: true || false,
+        AllRegions: true || false,
+      };
+      
+    const command = new DescribeRegionsCommand(input);
     const response = await ec2Client.send(command);
     return response.Regions.map(region => region.RegionName);
 
