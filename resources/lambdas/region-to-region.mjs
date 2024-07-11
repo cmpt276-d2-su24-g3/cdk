@@ -1,72 +1,82 @@
-import { Socket } from 'net'
+import { Socket } from 'net';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
-// find way to get regions programmatically
-// once the lambda function is deployed, it loses ability to references the rest of this codebase
-const REGIONS = [
-  'ca-west-1',
-  'ca-central-1',
-  'us-west-1',
-  'us-west-2',
-  'us-east-1',
-  'us-east-2',
-];
 const DB_REGION = 'us-west-2';
-const TABLE_NAME = process.env.TABLE_NAME;
-const THIS_REGION = process.env.THIS_REGION;
+const TABLE_NAME = 'R2R-Table';
+const THIS_REGION = 'us-east-1';
 const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
 
 const client = new DynamoDBClient({ region: DB_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+const ec2Client = new EC2Client({ region: DB_REGION });
 
 export const handler = async () => {
-    for (const region of REGIONS) await pingRegion(region);
+    console.log('Lambda function started');
+    
+    const regions = await getRegions();
+    console.log('Regions to ping:', regions);
+    
+    for (const region of regions) {
+        try {
+            await pingRegion(region);
+        } catch (error) {
+            console.error(`Error pinging region ${region}:`, error);
+        }
+    }
+    
+    console.log('Lambda function completed');
     return {
         statusCode: 200,
-        body: `Pings Complete`,
+        body: 'Pings Complete',
     };
+};
+
+async function getRegions() {
+    const command = new DescribeRegionsCommand({});
+    const response = await ec2Client.send(command);
+    return response.Regions.map(region => region.RegionName);
 }
   
 async function pingRegion(region) {
-    const url = `dynamodb.${region}.amazonaws.com`
-    const client = new Socket()
-    const start = process.hrtime.bigint()
+    const url = `dynamodb.${region}.amazonaws.com`;
+    const client = new Socket();
+    const start = process.hrtime.bigint();
     await new Promise((resolve, reject) => {
         client.connect(443, url, () => {
-            client.end()
-            resolve()
-        })
-        client.on('error', reject)
-    })
-    const end = process.hrtime.bigint()
-    const latency = Number(end - start) / 1e6
+            client.end();
+            resolve();
+        });
+        client.on('error', reject);
+    });
+    const end = process.hrtime.bigint();
+    const latency = Number(end - start) / 1e6;
+
+    console.log(`Ping to region ${region} took ${latency} ms`);
 
     try {
-        storeResult(region, latency)
-        console.log(region + " pinged successfully");
+        await storeResult(region, latency);
+        console.log(`Region ${region} pinged successfully and data stored`);
     } catch (error) {
-        console.log(region + " ping failed");
-        console.log(error);
+        console.error(`Error storing result for region ${region}:`, error);
     }
 }
 
 const storeResult = async (region, latency) => {
     const currentDate = new Date();
-    const currentTimeInSeconds = Math.floor(currentDate.getTime()/1000);
+    const currentTimeInSeconds = Math.floor(currentDate.getTime() / 1000);
     const expireAt = currentTimeInSeconds + TIME_TO_LIVE;
     const params = {
         TableName: TABLE_NAME,
         Item: {
+            source_region: THIS_REGION,
             timestamp: currentDate.toISOString(),
-            origin: THIS_REGION,
             destination: region,
-            'destination#timestamp': `${region}#${currentDate.toISOString()}`,
-            expireAt: expireAt,
             latency: latency,
+            expireAt: expireAt,
         },
     };
-  
+
     await ddbDocClient.send(new PutCommand(params));
 };
-  

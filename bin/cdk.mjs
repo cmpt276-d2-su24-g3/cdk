@@ -2,35 +2,48 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { LambdaStack } from '../lib/lambda-stack.mjs';
-import { PingDBStack } from '../lib/pingdb-stack.mjs';
-
-// find way to get regions programmatically
-const REGIONS = [
-    "ca-west-1",
-    "ca-central-1", 
-    "us-west-1",
-    "us-west-2",
-    "us-east-1",
-    "us-east-2",
-]
+import { R2RStack } from '../lib/r2r-stack.mjs';
+import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
 const app = new cdk.App();
 
-// need reference to pass to LambdaStack
-const pingDBStack = new PingDBStack(app, 'PingDBMain', {
+const r2rStack = new R2RStack(app, 'R2RMain', {
     env: {
         account: '992382793912',
-        region: 'us-west-2',
+        region: 'us-west-2',   
     },
 });
 
-REGIONS.forEach((region) => {
-    const id = `LambdaStack-${region}`;
-    new LambdaStack(app, id, {
-        table: pingDBStack.getTableReference(),
-        env: {
-            account: '992382793912',
-            region: region,
-        },
+// Create an EC2 client to describe regions
+const ec2Client = new EC2Client({ region: 'us-west-2' });
+
+// Define the AWS regions programmatically
+async function getRegions() {
+    const command = new DescribeRegionsCommand({});
+    const response = await ec2Client.send(command);
+    return response.Regions.map(region => region.RegionName);
+}
+
+async function deploy() {
+    // Get the regions and deploy LambdaStack to each
+    const regions = await getRegions();
+
+    regions.forEach((region) => {
+        const id = `LambdaStack-${region}`;
+        new LambdaStack(app, id, {
+            table: r2rStack.getTableReference(),
+            env: {
+                account: '992382793912', 
+                region: region,
+            },
+        });
     });
+
+    app.synth();
+}
+
+// Run the deploy function
+deploy().catch(err => {
+    console.error('Error deploying CDK app:', err);
+    process.exit(1);
 });
