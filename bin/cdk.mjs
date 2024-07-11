@@ -2,9 +2,19 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { LambdaStack } from '../lib/lambda-stack.mjs';
-import { PingDBStack } from '../lib/pingdb-stack.mjs';
+import { R2RStack } from '../lib/r2r-stack.mjs';
 
-// find way to get regions programmatically
+const app = new cdk.App();
+
+const r2rStack = new R2RStack(app, 'R2RMain', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2',   
+    },
+});
+
+/*
+// Define the AWS regions programmatically
 const REGIONS = [
     "ca-west-1",
     "ca-central-1", 
@@ -12,25 +22,19 @@ const REGIONS = [
     "us-west-2",
     "us-east-1",
     "us-east-2",
-]
+];
 
-const app = new cdk.App();
-
-// need reference to pass to LambdaStack
-const pingDBStack = new PingDBStack(app, 'PingDBMain', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2',
-    },
-});
-
+// Iterate through each region and deploy LambdaStack
 REGIONS.forEach((region) => {
     const id = `LambdaStack-${region}`;
     new LambdaStack(app, id, {
-        table: pingDBStack.getTableReference(),
+        table: r2rStack.getTableReference(),
         env: {
-            account: '992382793912',
+            account: '992382793912', 
             region: region,
         },
     });
 });
+
+*/
+
