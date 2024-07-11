@@ -4,7 +4,7 @@ import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
 const DB_REGION = 'us-west-2';
-const TABLE_NAME = 'R2R-table';
+const TABLE_NAME = 'R2R-Table';
 const THIS_REGION = 'us-east-1';
 const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
 
@@ -77,8 +77,6 @@ const storeResult = async (region, latency) => {
             expireAt: expireAt,
         },
     };
-
-    console.log('Storing item:', params);
 
     await ddbDocClient.send(new PutCommand(params));
 };
