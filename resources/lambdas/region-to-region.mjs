@@ -5,7 +5,7 @@ import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
 const DB_REGION = 'us-west-2';
 const TABLE_NAME = 'R2R-Table';
-const THIS_REGION = 'us-east-1';
+const THIS_REGION = process.env.THIS_REGION;
 const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
 
 const client = new DynamoDBClient({ region: DB_REGION });
