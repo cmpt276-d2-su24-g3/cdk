@@ -14,6 +14,7 @@ const r2rStack = new R2RStack(app, 'R2RMain', {
     },
 });
 
+
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
 
@@ -28,6 +29,7 @@ async function deploy() {
     // Get the regions and deploy LambdaStack to each
     const regions = await getRegions();
 
+    //r2r
     regions.forEach((region) => {
         const id = `LambdaStack-${region}`;
         new LambdaStack(app, id, {
@@ -41,6 +43,9 @@ async function deploy() {
 
     app.synth();
 }
+
+
+
 
 // Run the deploy function
 deploy().catch(err => {
