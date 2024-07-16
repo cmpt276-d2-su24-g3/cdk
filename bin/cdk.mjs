@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { LambdaStack } from '../lib/lambda-stack.mjs';
 import { R2RStack } from '../lib/r2r-stack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
+import { R2CStack } from '../lib/r2c-stack.mjs';
 
 const app = new cdk.App();
 
@@ -11,6 +12,13 @@ const r2rStack = new R2RStack(app, 'R2RMain', {
     env: {
         account: '992382793912',
         region: 'us-west-2',   
+    },
+});
+
+const r2cStack = new R2CStack(app, 'R2CMain', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', 
     },
 });
 
@@ -29,7 +37,6 @@ async function deploy() {
     // Get the regions and deploy LambdaStack to each
     const regions = await getRegions();
 
-    //r2r
     regions.forEach((region) => {
         const id = `LambdaStack-${region}`;
         new LambdaStack(app, id, {
@@ -43,8 +50,6 @@ async function deploy() {
 
     app.synth();
 }
-
-
 
 
 // Run the deploy function
