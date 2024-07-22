@@ -4,7 +4,7 @@ import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
 const DB_REGION = 'us-west-2';
-const TABLE_NAME = 'R2R-Table';
+const TABLE_NAME = 'PingDB';
 const THIS_REGION = process.env.THIS_REGION;
 const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
 
@@ -65,16 +65,17 @@ async function pingRegion(region) {
 
 const storeResult = async (region, latency) => {
     const currentDate = new Date();
-    const currentTimeInSeconds = Math.floor(currentDate.getTime() / 1000);
+    const currentTimeInSeconds = Math.floor(currentDate.getTime()/1000);
     const expireAt = currentTimeInSeconds + TIME_TO_LIVE;
     const params = {
         TableName: TABLE_NAME,
         Item: {
-            source_region: THIS_REGION,
             timestamp: currentDate.toISOString(),
+            origin: THIS_REGION,
             destination: region,
-            latency: latency,
+            'destination#timestamp': `${region}#${currentDate.toISOString()}`,
             expireAt: expireAt,
+            latency: latency,
         },
     };
 
