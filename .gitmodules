@@ -1,0 +1,3 @@
+[submodule "resources/client"]
+	path = resources/client
+	url = git@github.com:cmpt276-d2-su24-g3/client.git
