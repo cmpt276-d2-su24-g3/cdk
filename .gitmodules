@@ -1,3 +1,6 @@
 [submodule "resources/client"]
 	path = resources/client
 	url = git@github.com:cmpt276-d2-su24-g3/client.git
+[submodule "resources/chatbot"]
+	path = resources/chatbot
+	url = git@github.com:cmpt276-d2-su24-g3/chatbot.git
