@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import * as cdk from 'aws-cdk-lib';
 import { LambdaStack } from '../lib/lambda-stack.mjs';
 import { PingDBStack } from '../lib/r2r-stack.mjs';
@@ -8,20 +7,13 @@ import { R2CStack } from '../lib/r2c-stack.mjs';
 
 const app = new cdk.App();
 
+// Deploy PingDBStack in a specific region (us-west-2)
 const r2rStack = new PingDBStack(app, 'PingDBMain', {
     env: {
         account: '992382793912',
-        region: 'us-west-2',   
+        region: 'us-west-2',
     },
 });
-
-const r2cStack = new R2CStack(app, 'R2CMain', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2', 
-    },
-});
-
 
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
@@ -34,15 +26,33 @@ async function getRegions() {
 }
 
 async function deploy() {
-    // Get the regions and deploy LambdaStack to each
+    // Get the regions and deploy both LambdaStack and R2CStack to each
     const regions = await getRegions();
 
+
+    new R2CMainStack(app, 'MainR2CStack', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', // Main region for the parent stack
+    },
+});
+
     regions.forEach((region) => {
-        const id = `LambdaStack-${region}`;
-        new LambdaStack(app, id, {
-            table: r2rStack.getTableReference(),
+        // Deploy LambdaStack in each region
+        const lambdaStackId = `LambdaStack-${region}`;
+        new LambdaStack(app, lambdaStackId, {
+            table: r2rStack.getTableReference(), // Pass DynamoDB table reference if needed
             env: {
-                account: '992382793912', 
+                account: '992382793912',
+                region: region,
+            },
+        });
+
+        // Deploy R2CStack in each region
+        const r2cStackId = `R2CStack-${region}`;
+        new R2CStack(app, r2cStackId, {
+            env: {
+                account: '992382793912',
                 region: region,
             },
         });
@@ -50,7 +60,6 @@ async function deploy() {
 
     app.synth();
 }
-
 
 // Run the deploy function
 deploy().catch(err => {

@@ -4,10 +4,14 @@ import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 const ec2Client = new EC2Client({ region: 'us-west-2' });
 
 const headers = {
-  'Access-Control-Allow-Origin': '*',
-}
+  "Access-Control-Allow-Origin": '*', // Allows any origin
+  "Access-Control-Allow-Credentials": true, // Required if cookies or credentials are involved
+  "Content-Type": "application/json",
+};
+
 
 export const handler = async event => {
+  
   const { host } = event;
 
   if (!host) {

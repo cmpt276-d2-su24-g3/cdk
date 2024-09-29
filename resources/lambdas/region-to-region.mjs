@@ -77,7 +77,11 @@ const storeResult = async (region, latency) => {
             expireAt: expireAt,
             latency: latency,
         },
+
     };
+
+    
+
 
     await ddbDocClient.send(new PutCommand(params));
 };
