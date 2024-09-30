@@ -2,8 +2,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { LambdaStack } from '../lib/lambda-stack.mjs';
 import { PingDBStack } from '../lib/r2r-stack.mjs';
+import { S3Stack } from '../lib/s3-stack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 import { R2CStack } from '../lib/r2c-stack.mjs';
+import { ChatbotStack } from '../lib/docker-stack.mjs';
+import { ChatbotClientStack } from '../lib/chatbot-client-stack.mjs';
 
 const app = new cdk.App();
 
@@ -14,6 +17,35 @@ const r2rStack = new PingDBStack(app, 'PingDBMain', {
         region: 'us-west-2',
     },
 });
+
+const chatbotStack = new ChatbotStack(app, 'Chatbot', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2',   
+    },
+})
+
+const s3Stack = new S3Stack(app, 'S3Bucket', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2',   
+    }
+})
+
+const chatbotClientStack = new ChatbotClientStack(app, 'ChatbotClientStack', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', 
+    }
+})
+
+const r2cStack = new R2CStack(app, 'R2CMain', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', 
+    },
+});
+
 
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
