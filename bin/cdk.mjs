@@ -7,6 +7,7 @@ import { S3Stack } from '../lib/s3-stack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 import { R2CStack } from '../lib/r2c-stack.mjs';
 import { ChatbotStack } from '../lib/docker-stack.mjs';
+import { ChatbotClientStack } from '../lib/chatbot-client-stack.mjs';
 
 const app = new cdk.App();
 
@@ -28,6 +29,13 @@ const s3Stack = new S3Stack(app, 'S3Bucket', {
     env: {
         account: '992382793912',
         region: 'us-west-2',   
+    }
+})
+
+const chatbotClientStack = new ChatbotClientStack(app, 'ChatbotClientStack', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', 
     }
 })
 
