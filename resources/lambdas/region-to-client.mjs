@@ -17,14 +17,14 @@ export const handler = async event => {
     };
   }
 
-  const currentRegion = process.env.AWS_REGION;
+  const THIS_REGION = process.env.THIS_REGION;
 
-  console.log(`Pinging ${host} from region ${currentRegion}...`);
+  console.log(`Pinging ${host} from region ${THIS_REGION}...`);
 
   try {
-    const latency = await pingHost(host, currentRegion);
+    const latency = await pingHost(host, THIS_REGION);
 
-    const result = { region: currentRegion, latency };
+    const result = { region: THIS_REGION, latency };
 
     console.log(`Ping results for ${host}:`, result);
     return {
@@ -33,7 +33,7 @@ export const handler = async event => {
       body: JSON.stringify(result),
     };
   } catch (err) {
-    console.error(`Error pinging ${host} from region ${currentRegion}:`, err);
+    console.error(`Error pinging ${host} from region ${THIS_REGION}:`, err);
     return {
       statusCode: 500,
       headers,
