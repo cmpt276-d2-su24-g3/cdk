@@ -5,6 +5,7 @@ import { PingDBStack } from '../lib/r2r-stack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 import { R2CStack } from '../lib/r2c-stack.mjs';
 
+
 const app = new cdk.App();
 
 // Deploy PingDBStack in a specific region (us-west-2)
