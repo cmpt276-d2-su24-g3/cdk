@@ -1,7 +1,6 @@
 import { Socket } from 'net';
 
 const headers = {
-  "Access-Control-Allow-Origin": '*', // Allows any origin
   "Access-Control-Allow-Credentials": true, // Required if cookies or credentials are involved
   "Content-Type": "application/json",
 };
