@@ -30,12 +30,7 @@ async function deploy() {
     const regions = await getRegions();
 
 
-    new R2CMainStack(app, 'MainR2CStack', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2', // Main region for the parent stack
-    },
-});
+
 
     regions.forEach((region) => {
         // Deploy LambdaStack in each region

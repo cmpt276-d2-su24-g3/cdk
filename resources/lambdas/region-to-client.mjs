@@ -1,7 +1,4 @@
 import { Socket } from 'net';
-import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
-
-const ec2Client = new EC2Client({ region: 'us-west-2' });
 
 const headers = {
   "Access-Control-Allow-Origin": '*', // Allows any origin
@@ -9,9 +6,7 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-
 export const handler = async event => {
-  
   const { host } = event;
 
   if (!host) {
@@ -22,28 +17,23 @@ export const handler = async event => {
     };
   }
 
-  console.log(`Pinging ${host} from all AWS regions...`);
+  const currentRegion = process.env.AWS_REGION;
+
+  console.log(`Pinging ${host} from region ${currentRegion}...`);
 
   try {
-    const regions = await getRegions();
-    const results = await Promise.all(regions.map(async region => {
-      try {
-        const latency = await pingHost(host, region);
-        return { region, latency };
-      } catch (err) {
-        console.error(`Error pinging ${host} from region ${region}:`, err);
-        return { region, latency: 'Error' };
-      }
-    }));
+    const latency = await pingHost(host, currentRegion);
 
-    console.log(`Ping results for ${host}:`, results);
+    const result = { region: currentRegion, latency };
+
+    console.log(`Ping results for ${host}:`, result);
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(results),
+      body: JSON.stringify(result),
     };
   } catch (err) {
-    console.error('Error fetching regions or pinging host:', err);
+    console.error(`Error pinging ${host} from region ${currentRegion}:`, err);
     return {
       statusCode: 500,
       headers,
@@ -52,22 +42,11 @@ export const handler = async event => {
   }
 };
 
-async function getRegions() {
-  const command = new DescribeRegionsCommand({});
-  try {
-    const response = await ec2Client.send(command);
-    return response.Regions.map(region => region.RegionName);
-  } catch (err) {
-    console.error('Error fetching regions:', err);
-    throw err;
-  }
-}
-
 async function pingHost(host, region) {
   return new Promise((resolve, reject) => {
     const client = new Socket();
     const start = process.hrtime.bigint();
-    
+
     client.connect(443, host, () => {
       client.end();
       const end = process.hrtime.bigint();
