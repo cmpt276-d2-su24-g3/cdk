@@ -6,7 +6,6 @@ import { S3Stack } from '../lib/s3-stack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 import { R2CStack } from '../lib/r2c-stack.mjs';
 import { ChatbotStack } from '../lib/docker-stack.mjs';
-import { ChatbotClientStack } from '../lib/chatbot-client-stack.mjs';
 
 const app = new cdk.App();
 
@@ -25,28 +24,6 @@ const chatbotStack = new ChatbotStack(app, 'Chatbot', {
     },
 })
 
-const s3Stack = new S3Stack(app, 'S3Bucket', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2',   
-    }
-})
-
-const chatbotClientStack = new ChatbotClientStack(app, 'ChatbotClientStack', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2', 
-    }
-})
-
-const r2cStack = new R2CStack(app, 'R2CMain', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2', 
-    },
-});
-
-
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
 
@@ -57,17 +34,24 @@ async function getRegions() {
     return response.Regions.map(region => region.RegionName);
 }
 
-async function deploy() {
-    // Get the regions and deploy both LambdaStack and R2CStack to each
-    const regions = await getRegions();
+// Get the regions and deploy both LambdaStack and R2CStack to each
+const regions = await getRegions();
 
+// NOTE: these regions are excluded from R2C as they don't have Lambda Function URLs
+const R2CRegions = regions.filter(
+    region => (region != "ap-south-2") && (region != "ap-southeast-4") && (region != "ap-southeast-5") && 
+    (region != "ca-west-1") && (region != "eu-south-2") && (region != "eu-central-2") && 
+    (region != "il-central-1") && (region != "me-central-1"))
 
-    new R2CMainStack(app, 'MainR2CStack', {
+const s3Stack = new S3Stack(app, 'S3Bucket', {
     env: {
         account: '992382793912',
-        region: 'us-west-2', // Main region for the parent stack
+        region: 'us-west-2',   
     },
-});
+    regions: ["us-west-1", "us-west-2"]//R2CRegions
+})
+
+async function deploy() {
 
     regions.forEach((region) => {
         // Deploy LambdaStack in each region
@@ -79,7 +63,9 @@ async function deploy() {
                 region: region,
             },
         });
+    });
 
+    R2CRegions.forEach((region) => {
         // Deploy R2CStack in each region
         const r2cStackId = `R2CStack-${region}`;
         new R2CStack(app, r2cStackId, {
@@ -89,7 +75,6 @@ async function deploy() {
             },
         });
     });
-
     app.synth();
 }
 
