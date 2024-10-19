@@ -1,6 +1,6 @@
 import { Socket } from 'net';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 
 const DB_REGION = 'us-west-2';
@@ -20,10 +20,15 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export const handler = async () => {
-    console.log('Lambda function started');
+export const handler = async (event) => {
+    // Check if this is an API Gateway GET request to fetch data
+    if (event.httpMethod === 'GET') {
+        console.log('Handling GET request to fetch latency data');
+        return await fetchLatencyData();
+    }
 
-    // Fetch regions to ping
+    // Otherwise, proceed with the existing ping logic
+    console.log('Handling region-to-region ping');
     const regions = await getRegions();
     console.log('Regions to ping:', regions);
 
@@ -46,8 +51,8 @@ export const handler = async () => {
     // Return the results to the client with CORS headers
     return {
         statusCode: 200,
-        headers, // Adding CORS headers
-        body: JSON.stringify(results), 
+        headers,
+        body: JSON.stringify(results),
     };
 };
 
@@ -63,7 +68,7 @@ async function pingRegion(region) {
     const url = `dynamodb.${region}.amazonaws.com`;
     const client = new Socket();
     const start = process.hrtime.bigint();
-    
+
     await new Promise((resolve, reject) => {
         client.connect(443, url, () => {
             client.end();
@@ -71,7 +76,7 @@ async function pingRegion(region) {
         });
         client.on('error', reject);
     });
-    
+
     const end = process.hrtime.bigint();
     const latency = Number(end - start) / 1e6; // Convert to milliseconds
 
@@ -100,4 +105,27 @@ const storeResult = async (region, latency) => {
     };
 
     await ddbDocClient.send(new PutCommand(params));
+};
+
+// Query DynamoDB for existing latency data
+const fetchLatencyData = async () => {
+    try {
+        const command = new ScanCommand({
+            TableName: TABLE_NAME,
+        });
+        const data = await ddbDocClient.send(command);
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(data.Items),
+        };
+    } catch (error) {
+        console.error("Error querying DynamoDB:", error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ message: 'Error querying latency data' }),
+        };
+    }
 };
