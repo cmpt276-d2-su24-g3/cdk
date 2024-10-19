@@ -107,7 +107,7 @@ const storeResult = async (region, latency) => {
     await ddbDocClient.send(new PutCommand(params));
 };
 
-// Query DynamoDB for existing latency data
+// Query DynamoDB 
 const fetchLatencyData = async () => {
     try {
         const command = new ScanCommand({
