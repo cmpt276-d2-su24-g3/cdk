@@ -21,12 +21,6 @@ const headers = {
 };
 
 export const handler = async (event) => {
-    // Check if this is an API Gateway GET request to fetch data
-    if (event.httpMethod === 'GET') {
-        console.log('Handling GET request to fetch latency data');
-        return await fetchLatencyData();
-    }
-
     // Otherwise, proceed with the existing ping logic
     console.log('Handling region-to-region ping');
     const regions = await getRegions();
@@ -105,27 +99,4 @@ const storeResult = async (region, latency) => {
     };
 
     await ddbDocClient.send(new PutCommand(params));
-};
-
-// Query DynamoDB for existing latency data
-const fetchLatencyData = async () => {
-    try {
-        const command = new ScanCommand({
-            TableName: TABLE_NAME,
-        });
-        const data = await ddbDocClient.send(command);
-
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(data.Items),
-        };
-    } catch (error) {
-        console.error("Error querying DynamoDB:", error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ message: 'Error querying latency data' }),
-        };
-    }
 };
