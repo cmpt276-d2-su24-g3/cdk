@@ -24,13 +24,6 @@ const chatbotStack = new ChatbotStack(app, 'Chatbot', {
     },
 })
 
-const r2cStack = new R2CStack(app, 'R2CMain', {
-    env: {
-        account: '992382793912',
-        region: 'us-west-2', 
-    },
-});
-
 
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
