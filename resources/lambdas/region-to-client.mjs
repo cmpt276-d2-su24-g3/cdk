@@ -1,16 +1,33 @@
 import { Socket } from 'net';
-import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
-
-const ec2Client = new EC2Client({ region: 'us-west-2' });
+import { promises as dns } from 'dns';
 
 const headers = {
-  'Access-Control-Allow-Origin': '*',
-}
+  "Access-Control-Allow-Origin" : "*",
+  "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Credentials": true,
+  "Content-Type": "application/json",
+};
 
-export const handler = async event => {
-  const { host } = event;
+
+
+export const handler = async (event) => {
+  let body;
+
+  try {
+    body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+  } catch (err) {
+    console.error('Error parsing request body:', err.message);
+    return {
+      statusCode: 400,
+      headers,
+      body: 'Invalid request body',
+    };
+  }
+
+  const { host } = body;
 
   if (!host) {
+    console.error('Host is missing from the request body');
     return {
       statusCode: 400,
       headers,
@@ -18,63 +35,58 @@ export const handler = async event => {
     };
   }
 
-  console.log(`Pinging ${host} from all AWS regions...`);
+  const THIS_REGION = process.env.THIS_REGION;
+
+  console.log(`Pinging ${host} from region ${THIS_REGION}...`);
 
   try {
-    const regions = await getRegions();
-    const results = await Promise.all(regions.map(async region => {
-      try {
-        const latency = await pingHost(host, region);
-        return { region, latency };
-      } catch (err) {
-        console.error(`Error pinging ${host} from region ${region}:`, err);
-        return { region, latency: 'Error' };
-      }
-    }));
+    const latency = await pingHost(host, THIS_REGION);
 
-    console.log(`Ping results for ${host}:`, results);
+    const result = { region: THIS_REGION, latency };
+
+    console.log(`Ping results for ${host}:`, result);
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(results),
+      body: JSON.stringify(result),
     };
   } catch (err) {
-    console.error('Error fetching regions or pinging host:', err);
+    console.error(`Error pinging ${host} from region ${THIS_REGION}:`, err.message);
     return {
       statusCode: 500,
       headers,
-      body: 'Internal Server Error',
+      body: `Internal Server Error: ${err.message}`,
     };
   }
 };
 
-async function getRegions() {
-  const command = new DescribeRegionsCommand({});
-  try {
-    const response = await ec2Client.send(command);
-    return response.Regions.map(region => region.RegionName);
-  } catch (err) {
-    console.error('Error fetching regions:', err);
-    throw err;
-  }
-}
-
 async function pingHost(host, region) {
-  return new Promise((resolve, reject) => {
-    const client = new Socket();
-    const start = process.hrtime.bigint();
-    
-    client.connect(443, host, () => {
-      client.end();
-      const end = process.hrtime.bigint();
-      const latency = Number(end - start) / 1e6;
-      console.log(`Pinged ${host} from ${region} in ${latency}ms`);
-      resolve(latency);
-    });
+  try {
+    // Resolve the host to an IP address using DNS
+    const addresses = await dns.lookup(host);
+    const resolvedHost = addresses.address;
 
-    client.on('error', (err) => {
-      console.error(`Error pinging ${host} from ${region}:`, err);
-      reject(err);
+    console.log(`Resolved ${host} to ${resolvedHost}`);
+
+    return new Promise((resolve, reject) => {
+      const client = new Socket();
+      const start = process.hrtime.bigint();
+
+      client.connect(443, resolvedHost, () => {
+        client.end();
+        const end = process.hrtime.bigint();
+        const latency = Number(end - start) / 1e6; // Convert nanoseconds to milliseconds
+        console.log(`Pinged ${host} (IP: ${resolvedHost}) from ${region} in ${latency}ms`);
+        resolve(latency);
+      });
+
+      client.on('error', (err) => {
+        console.error(`Error pinging ${host} from ${region}:`, err.message);
+        reject(new Error(`Failed to ping ${host}: ${err.message}`));
+      });
     });
-  });
+  } catch (error) {
+    console.error(`Error resolving DNS for ${host}:`, error.message);
+    throw new Error(`DNS resolution failed for ${host}`);
+  }
 }
