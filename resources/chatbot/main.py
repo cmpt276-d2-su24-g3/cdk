@@ -79,7 +79,7 @@ async def chat_api(chat_request: chat_request_model) -> StreamingResponse:
         )
         message = [HumanMessage(chat_request.input + time_stamp)]
 
-        yield "<|message_received|>"
+        yield ""
         while True:
             gathered = None
             async for chunk in inference(input={"messages": message}):
@@ -93,7 +93,7 @@ async def chat_api(chat_request: chat_request_model) -> StreamingResponse:
                         yield chunk.content[0]["text"]
 
             if gathered.tool_call_chunks:
-                yield "<|tool_call|>"
+                yield ""
 
                 message = []
                 for tool_call in gathered.tool_call_chunks:
