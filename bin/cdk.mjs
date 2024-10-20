@@ -24,6 +24,14 @@ const chatbotStack = new ChatbotStack(app, 'Chatbot', {
     },
 })
 
+const r2cStack = new R2CStack(app, 'R2CMain', {
+    env: {
+        account: '992382793912',
+        region: 'us-west-2', 
+    },
+});
+
+
 // Create an EC2 client to describe regions
 const ec2Client = new EC2Client({ region: 'us-west-2' });
 
@@ -36,12 +44,6 @@ async function getRegions() {
 
 // Get the regions and deploy both LambdaStack and R2CStack to each
 const regions = await getRegions();
-
-// NOTE: these regions are excluded from R2C as they don't have Lambda Function URLs
-const R2CRegions = regions.filter(
-    region => (region != "ap-south-2") && (region != "ap-southeast-4") && (region != "ap-southeast-5") && 
-    (region != "ca-west-1") && (region != "eu-south-2") && (region != "eu-central-2") && 
-    (region != "il-central-1") && (region != "me-central-1"))
 
 const s3Stack = new S3Stack(app, 'S3Bucket', {
     env: {
@@ -63,9 +65,7 @@ async function deploy() {
                 region: region,
             },
         });
-    });
 
-    R2CRegions.forEach((region) => {
         // Deploy R2CStack in each region
         const r2cStackId = `R2CStack-${region}`;
         new R2CStack(app, r2cStackId, {
@@ -75,6 +75,7 @@ async function deploy() {
             },
         });
     });
+    
     app.synth();
 }
 
@@ -83,3 +84,4 @@ deploy().catch(err => {
     console.error('Error deploying CDK app:', err);
     process.exit(1);
 });
+
