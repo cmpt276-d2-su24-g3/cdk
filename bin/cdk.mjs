@@ -50,7 +50,7 @@ const s3Stack = new S3Stack(app, 'S3Bucket', {
         account: '992382793912',
         region: 'us-west-2',   
     },
-    regions: ["us-west-1", "us-west-2"]//R2CRegions
+    regions: regions
 })
 
 async function deploy() {
@@ -75,7 +75,7 @@ async function deploy() {
             },
         });
     });
-    
+
     app.synth();
 }
 
