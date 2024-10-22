@@ -4,7 +4,7 @@ from functools import partial
 from typing import AsyncGenerator
 
 import boto3
-from fastapi import FastAPI, HTTPException, Response, Security
+from fastapi import FastAPI, HTTPException, Response, Security, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.api_key import APIKeyHeader
 from langchain_aws import ChatBedrock
@@ -192,3 +192,17 @@ async def generate_title_api(history_request: history_request_model):
 @app.get("/")
 async def health_check():
     return Response(status_code=200)
+
+
+@app.post("/available-services")
+async def available_services_api(region_name: str = Body(..., embed=True)):
+    try:
+        session = boto3.Session(region_name=region_name)
+        available_services = session.get_available_services()
+
+        result = ", ".join(available_services)
+        result += f"\nTotal {len(available_services)} available."
+
+        return {"services": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
