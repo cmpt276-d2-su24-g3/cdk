@@ -1,4 +1,3 @@
-
 # Chatbot API Documentation
 
 ## Authentication
@@ -95,6 +94,23 @@ This endpoint takes a UUID v4 session id and returns a title in plaintext based 
 
 - Plain text title
 - HTTP status 404 if history is not found
+
+### 5. `/available-services`
+
+This endpoint takes the name of an AWS region and returns a list of all services available in that region.
+
+#### Input
+
+```json
+{
+  "region_name": "str"
+}
+```
+
+#### Output
+
+- JSON object containing the list of available services
+- HTTP status 400 if there's an error processing the request
 
 ## Tools
 
