@@ -17,7 +17,7 @@ const r2rStack = new PingDBStack(app, 'PingDBMain', {
     },
 });
 
-const chatbotStack = new ChatbotStack(app, 'Chatbot', {
+const chatbotStack = new ChatbotStack(app, 'ChatbotStack', {
     env: {
         account: '992382793912',
         region: 'us-west-2',   
