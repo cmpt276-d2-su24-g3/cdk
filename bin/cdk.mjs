@@ -9,7 +9,7 @@ import { ChatbotStack } from '../lib/docker-stack.mjs';
 
 const app = new cdk.App();
 
-// Deploy PingDBStack in a specific region (us-west-2)
+// Central Deployments (us-west-2, Oregon)
 const r2rStack = new PingDBStack(app, 'PingDBMain', {
     env: {
         account: '992382793912',
@@ -24,18 +24,14 @@ const chatbotStack = new ChatbotStack(app, 'Chatbot', {
     },
 })
 
-
-// Create an EC2 client to describe regions
+// Regional Deployments
 const ec2Client = new EC2Client({ region: 'us-west-2' });
-
-// Define the AWS regions programmatically
 async function getRegions() {
     const command = new DescribeRegionsCommand({});
     const response = await ec2Client.send(command);
     return response.Regions.map(region => region.RegionName);
 }
 
-// Get the regions and deploy both LambdaStack and R2CStack to each
 const regions = await getRegions();
 
 const s3Stack = new S3Stack(app, 'S3Bucket', {
@@ -49,17 +45,15 @@ const s3Stack = new S3Stack(app, 'S3Bucket', {
 async function deploy() {
 
     regions.forEach((region) => {
-        // Deploy LambdaStack in each region
         const lambdaStackId = `LambdaStack-${region}`;
         new LambdaStack(app, lambdaStackId, {
-            table: r2rStack.getTableReference(), // Pass DynamoDB table reference if needed
+            table: r2rStack.getTableReference(),
             env: {
                 account: '992382793912',
                 region: region,
             },
         });
 
-        // Deploy R2CStack in each region
         const r2cStackId = `R2CStack-${region}`;
         new R2CStack(app, r2cStackId, {
             env: {
@@ -72,7 +66,6 @@ async function deploy() {
     app.synth();
 }
 
-// Run the deploy function
 deploy().catch(err => {
     console.error('Error deploying CDK app:', err);
     process.exit(1);
