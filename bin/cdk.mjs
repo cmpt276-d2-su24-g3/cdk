@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { LambdaStack } from '../lib/lambda-stack.mjs';
-import { PingDBStack } from '../lib/r2r-stack.mjs';
-import { S3Stack } from '../lib/s3-stack.mjs';
+import { R2RFunctionStack } from '../lib/r2rFunctionStack.mjs';
+import { R2RDataStack } from '../lib/r2rDataStack.mjs';
+import { ClientStack } from '../lib/clientStack.mjs';
 import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
-import { R2CStack } from '../lib/r2c-stack.mjs';
-import { ChatbotStack } from '../lib/docker-stack.mjs';
+import { R2CStack } from '../lib/r2cStack.mjs';
+import { ChatbotStack } from '../lib/chatbotStack.mjs';
 
 const app = new cdk.App();
 
 // Central Deployments
-const r2rStack = new PingDBStack(app, 'PingDBMain', {
+const r2rStack = new R2RDataStack(app, 'r2r-data-stack', {
     env: {
         account: process.env.AWS_DEFAULT_ACCOUNT,
         region: process.env.AWS_DEFAULT_REGION,
     },
 });
 
-const chatbotStack = new ChatbotStack(app, 'ChatbotStack', {
+const chatbotStack = new ChatbotStack(app, 'chatbot-stack', {
     env: {
         account: process.env.AWS_DEFAULT_ACCOUNT,
         region: process.env.AWS_DEFAULT_REGION,   
@@ -34,7 +34,7 @@ async function getRegions() {
 
 const regions = await getRegions();
 
-const s3Stack = new S3Stack(app, 'S3Bucket', {
+const clientStack = new ClientStack(app, 'client-stack', {
     env: {
         account: process.env.AWS_DEFAULT_ACCOUNT,
         region: process.env.AWS_DEFAULT_REGION,   
@@ -45,8 +45,8 @@ const s3Stack = new S3Stack(app, 'S3Bucket', {
 async function deploy() {
 
     regions.forEach((region) => {
-        const lambdaStackId = `LambdaStack-${region}`;
-        new LambdaStack(app, lambdaStackId, {
+        const lambdaStackId = `r2r-function-stack-${region}`;
+        new R2RFunctionStack(app, lambdaStackId, {
             table: r2rStack.getTableReference(),
             env: {
                 account: process.env.AWS_DEFAULT_ACCOUNT,
@@ -54,7 +54,7 @@ async function deploy() {
             },
         });
 
-        const r2cStackId = `R2CStack-${region}`;
+        const r2cStackId = `r2c-stack-${region}`;
         new R2CStack(app, r2cStackId, {
             env: {
                 account: process.env.AWS_DEFAULT_ACCOUNT,
