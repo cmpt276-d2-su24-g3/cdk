@@ -9,23 +9,23 @@ import { ChatbotStack } from '../lib/docker-stack.mjs';
 
 const app = new cdk.App();
 
-// Central Deployments (us-west-2, Oregon)
+// Central Deployments
 const r2rStack = new PingDBStack(app, 'PingDBMain', {
     env: {
-        account: '992382793912',
-        region: 'us-west-2',
+        account: process.env.AWS_DEFAULT_ACCOUNT,
+        region: process.env.AWS_DEFAULT_REGION,
     },
 });
 
 const chatbotStack = new ChatbotStack(app, 'ChatbotStack', {
     env: {
-        account: '992382793912',
-        region: 'us-west-2',   
+        account: process.env.AWS_DEFAULT_ACCOUNT,
+        region: process.env.AWS_DEFAULT_REGION,   
     },
 })
 
 // Regional Deployments
-const ec2Client = new EC2Client({ region: 'us-west-2' });
+const ec2Client = new EC2Client({ region: process.env.AWS_DEFAULT_REGION });
 async function getRegions() {
     const command = new DescribeRegionsCommand({});
     const response = await ec2Client.send(command);
@@ -36,8 +36,8 @@ const regions = await getRegions();
 
 const s3Stack = new S3Stack(app, 'S3Bucket', {
     env: {
-        account: '992382793912',
-        region: 'us-west-2',   
+        account: process.env.AWS_DEFAULT_ACCOUNT,
+        region: process.env.AWS_DEFAULT_REGION,   
     },
     regions: regions
 })
@@ -49,7 +49,7 @@ async function deploy() {
         new LambdaStack(app, lambdaStackId, {
             table: r2rStack.getTableReference(),
             env: {
-                account: '992382793912',
+                account: process.env.AWS_DEFAULT_ACCOUNT,
                 region: region,
             },
         });
@@ -57,7 +57,7 @@ async function deploy() {
         const r2cStackId = `R2CStack-${region}`;
         new R2CStack(app, r2cStackId, {
             env: {
-                account: '992382793912',
+                account: process.env.AWS_DEFAULT_ACCOUNT,
                 region: region,
             },
         });
