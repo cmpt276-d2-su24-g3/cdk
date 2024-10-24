@@ -31,3 +31,8 @@ As the initial deployment can take a while, you may want to use the --require-ap
 ## Cloud Architecture
 
 ![Cloud Architecture Diagram](./resources/assets/cloud_architecture.svg)
+
+Amazon LQ is designed to be modular and scalable.  
+Aside from r2rFunctionStack, which is dependent on r2rDataStack, each stack can be deployed independently.  
+Chatbot, Region-to-Region, and Region-to-Client can be accessed through API Gateway endpoints even when Client is not deployed.  
+However, also note that the Chatbot contains the API for available services, which is used by Client.  
