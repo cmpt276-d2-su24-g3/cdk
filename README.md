@@ -5,16 +5,29 @@ Our tools provide precise latency data for region-to-region, region-to-client, a
 
 ## Setup & Deployment
 
-Amazon LQ requires minimal setup and deployment before it is ready to be used. Follow the instructions below:
+Amazon LQ requires minimal setup and deployment before it is ready to be used. Follow the instructions below:  
 
 ### CDK Setup
 
-Ensure that CDK is ...
+Ensure that CDK is properly configured. This includes configuring the AWS CLI with the necessary permissions and bootstrapping the environment.  
+Follow instructions [here](https://docs.aws.amazon.com/cdk/v2/guide/configure-env.html).  
 
 ### Environment Variables
 
-...
+Place .env file in the root directory and fill in the following variables:  
+  
+CHATBOT_API_KEY=  
+AWS_DEFAULT_REGION= // in the form of "us-west-2"  
+AWS_DEFAULT_ACCOUNT=  
+BEDROCK_MODEL_ID=  
+AWS_ACCESS_KEY_ID= // necessary for boto3 in Chatbot  
+AWS_SECRET_ACCESS_KEY= // necessary for boto3 in Chatbot  
 
-### Run cdk.mjs
+### Deploy
+
+Run 'cdk deploy --all' to deploy the application.  
+As the initial deployment can take a while, you may want to use the --require-approval never flag.  
 
 ## Cloud Architecture
+
+![Cloud Architecture Diagram](./resources/assets/cloud_architecture.svg)
