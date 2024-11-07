@@ -36,3 +36,30 @@ Amazon LQ is designed to be modular and scalable.
 Aside from r2rFunctionStack, which is dependent on r2rDataStack, each stack can be deployed independently.  
 Chatbot, Region-to-Region, and Region-to-Client can be accessed through API Gateway endpoints even when Client is not deployed.  
 However, also note that the Chatbot contains the API for available services, which is used by Client.  
+
+## API Documentation
+
+### Fetch Ping API
+
+Endpoint for retrieving latency data between AWS regions.
+
+**Endpoint**: `POST /fetch-ping`
+
+**Request Format**:
+```json
+{
+    "origin": "us-west-2",  
+    "destinations": [  
+        "us-east-1",
+        "eu-west-1"
+    ],
+    "timeframe": "latest" // latest, 1d, 7d, 30d
+}
+```
+**Response Format**:
+```json
+{
+    "us-east-1": 100,
+    "eu-west-1": 200
+}
+```
