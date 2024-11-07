@@ -6,7 +6,7 @@ import { EC2Client, DescribeRegionsCommand } from "@aws-sdk/client-ec2";
 const DB_REGION = 'us-west-2';
 const TABLE_NAME = 'PingDB';
 const THIS_REGION = process.env.THIS_REGION;
-const TIME_TO_LIVE = 7 * 24 * 60 * 60; // 1 week in seconds
+const TIME_TO_LIVE = 30 * 24 * 60 * 60; // 1 month in seconds
 
 // Initialize clients outside the handler
 const client = new DynamoDBClient({ region: DB_REGION });

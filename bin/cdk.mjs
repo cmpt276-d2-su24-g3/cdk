@@ -17,7 +17,7 @@ const r2rStack = new PingDBStack(app, 'PingDBMain', {
     },
 });
 
-const chatbotStack = new ChatbotStack(app, 'ChatbotStack', {
+const chatbotStack = new ChatbotStack(app, 'Chatbot', {
     env: {
         account: process.env.AWS_DEFAULT_ACCOUNT,
         region: process.env.AWS_DEFAULT_REGION,   
