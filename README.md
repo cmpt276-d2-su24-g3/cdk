@@ -33,19 +33,22 @@ As the initial deployment can take a while, you may want to use the --require-ap
 ![Cloud Architecture Diagram](./resources/assets/cloud_architecture.svg)
 
 Amazon LQ is designed to be modular and scalable.  
-Aside from r2rFunctionStack, which is dependent on r2rDataStack, each stack can be deployed independently.  
-Chatbot, Region-to-Region, and Region-to-Client can be accessed through API Gateway endpoints even when Client is not deployed.  
-However, also note that the Chatbot contains the API for available services, which is used by Client.  
+The Region-to-Region module, consisting of PingDBMain and regional LambdaStacks allows for collection, storage, and retrieval of latency data between AWS regions.  
+The Region-to-Client module, consisting of regional R2CStacks, allows for collection of real-time latency data from AWS regions to a specified URL.  
+The Chatbot module allows for users to retrieve latency data using natural language from a chatbot set up to answer AWS-related questions.  
+The Client module allows for users to view latency data in a web application.  
 
 ## API Documentation
 
-### Fetch Ping API
+### Region-to-Region Module
+
+#### Fetch Ping API
 
 Endpoint for retrieving latency data between AWS regions.
 
 **Endpoint**: `POST /fetch-ping`
 
-**Request Format**:
+**Input**:
 ```json
 {
     "origin": "us-west-2",  
@@ -56,10 +59,118 @@ Endpoint for retrieving latency data between AWS regions.
     "timeframe": "latest" // latest, 1d, 7d, 30d
 }
 ```
-**Response Format**:
+**Output**:
+- JSON object containing the latency data (ms) for each destination region
+- HTTP status 400 if missing or invalid parameters
+- HTTP status 500 if internal server error
+
+### Region-to-Client Module
+
+#### R2C API
+
+Endpoint for retrieving latency data from AWS regions to a specified URL.
+
+**Endpoint**: `POST /url-ping`
+
+**Input**:
 ```json
 {
-    "us-east-1": 100,
-    "eu-west-1": 200
+    "host": "example.com"  
 }
 ```
+
+**Output**:
+- JSON object containing:
+```json
+{
+    "region": "aws-region-id",  
+    "latency": 123.45  
+}
+```
+- HTTP status 400 if host is missing or request body is invalid
+- HTTP status 500 if ping fails or internal server error occurs
+
+### Chatbot Module
+
+#### Chat API
+
+Endpoint for interacting with the chatbot and receiving streamed responses.
+
+**Endpoint**: `POST /chat`
+
+**Input**:
+```json
+{
+    "input": "str",
+    "session_id": "str",
+    "time": "str"
+}
+```
+**Output**:
+- Plain text via HTTP stream
+- Streams an `<|tool_call|>` token when calling tools
+
+#### Chat History API
+
+Endpoint for retrieving chat history for a specific session.
+
+**Endpoint**: `POST /get-history`
+
+**Input**:
+```json
+{
+    "session_id": "str"
+}
+```
+**Output**:
+- Plain text JSON containing chat history
+- HTTP status 404 if history is not found
+
+#### Delete History API
+
+Endpoint for deleting chat history for a specific session.
+
+**Endpoint**: `POST /delete-history`
+
+**Input**:
+```json
+{
+    "session_id": "str"
+}
+```
+**Output**:
+- HTTP status 204 (No Content)
+- If history is not found, returns HTTP status 204 and does nothing
+- If deletion is not successful, returns HTTP status 409
+
+#### Generate Title API
+
+Endpoint for generating a title based on chat history.
+
+**Endpoint**: `POST /generate-title`
+
+**Input**:
+```json
+{
+    "session_id": "str"
+}
+```
+**Output**:
+- Plain text title
+- HTTP status 404 if history is not found
+
+#### Available Services API
+
+Endpoint for retrieving AWS services available in a specific region.
+
+**Endpoint**: `POST /available-services`
+
+**Input**:
+```json
+{
+    "region_name": "str"
+}
+```
+**Output**:
+- JSON object containing the list of available services
+- HTTP status 400 if there's an error processing the request
